@@ -8,7 +8,7 @@ const io = new Server(server);
 
 
 // Our Classes
-const sqlite_class = require('./class/sqlite.class.js');
+const mysql_class = require('./class/mysql.class.js');
 const messaging_class = require('./class/messaging.class.js');
 
 // Connection.
@@ -32,6 +32,12 @@ io.on('connection', (socket) => {
   })
 
   socket.on('Message-Send', (data) => {
+    messaging_class.SendMessage(data)
+    .then((result) => {
+      console.log(result)
+    }).catch((err) => {
+      console.log(err)
+    })
     console.log(data);
   })
 });
