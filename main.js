@@ -11,9 +11,6 @@ const io = new Server(server);
 const mysql_class = require('./class/mysql.class.js');
 const messaging_class = require('./class/messaging.class.js');
 
-// Connection.
-sqlite_class.ConnectAsync();
-
 app.get('/', (req, res) => {
   res.send("Hiya hun");
 })
