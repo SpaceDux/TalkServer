@@ -12,6 +12,9 @@ const mysql_class = require('./class/mysql.class.js');
 const messaging_class = require('./class/messaging.class.js');
 
 app.get('/', (req, res) => {
+  let date = new Date(Date.now());
+  date.toISOString();
+  console.log(date)
   res.send("Hiya hun");
 })
 
@@ -31,12 +34,22 @@ io.on('connection', (socket) => {
   socket.on('Message-Send', (data) => {
     messaging_class.SendMessage(data)
     .then((result) => {
-      console.log(result)
+      // IO SENDS TO ALL USERS
+      io.emit('Message-Received', result);
     }).catch((err) => {
       console.log(err)
     })
-    console.log(data);
   })
+
+  socket.on('Message-FetchInit', (data) => {
+    messaging_class.GetMessages(data)
+    .then((result) => {
+      socket.emit('Message-FetchInit_Reply', result);
+    }).catch((err) => {
+      console.log(err)
+    })
+  })
+
 });
 
 server.listen(3000, () => {
