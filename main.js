@@ -26,7 +26,6 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('a user connected');
 
-
   socket.on('disconnect', (data) => {
     console.log("user has disconnected.")
     socket.disconnect();
@@ -34,27 +33,37 @@ io.on('connection', (socket) => {
 
   // Messages
   socket.on('Message-Send', (data) => {
-    console.log(socket.handshake.headers["x-real-ip"])
-    messaging_class.SendMessage(data)
-    .then((result) => {
-      // IO SENDS TO ALL USERS
-      io.emit('Message-Received', result);
+    user_class.CheckToken(data.Token, socket.handshake.headers["x-real-ip"])
+    .then((user) => {
+      messaging_class.SendMessage(user, data)
+      .then((result) => {
+        // IO SENDS TO ALL USERS
+        io.emit('Message-Received', result);
+      }).catch((err) => {
+        console.log(err)
+        // io.emit('Message-Received', err);
+      })
     }).catch((err) => {
       console.log(err)
+      // Force logout
     })
   })
   socket.on('Message-FetchInit', (data) => {
-    messaging_class.GetMessages(data)
-    .then((result) => {
-      socket.emit('Message-FetchInit_Reply', result);
+    user_class.CheckToken(data.Token, socket.handshake.headers["x-real-ip"])
+    .then((user) => {
+      messaging_class.GetMessages(data)
+      .then((result) => {
+        socket.emit('Message-FetchInit_Reply', result);
+      }).catch((err) => {
+        console.log(err)
+      })
     }).catch((err) => {
-      console.log(err)
+      console.log(err);
     })
   })
 
   // Users
   socket.on('User-Authenticate', (data) => {
-    console.log(socket.handshake.headers["x-real-ip"])
     user_class.Login(data.username, data.password, socket.handshake.headers["x-real-ip"])
     .then((result) => {
       socket.emit('User-Authenticate_Reply', result);

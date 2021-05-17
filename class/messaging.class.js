@@ -1,29 +1,9 @@
 let pool = require('./mysql.class.js').Connect()
+let user_class = require('./user.class.js')
+
 
 
 let thisclass = {
-  Test: function() {
-    return new Promise(function(resolve, reject) {
-      pool.getConnection((err, connection) => {
-        if(!err) {
-          console.log("Got a connection pool.");
-          let username = "Cas";
-          connection.query("SELECT id FROM users WHERE username = ?", [username], (err, rows) => {
-            if(!err) {
-              console.log(rows);
-              connection.release(); // ALWAYS RELEASE CONNECTION BACK TO POOL!!!!
-            } else {
-              console.log(err);
-              connection.release(); // RELEASE HERE TOO !!!
-            }
-          })
-        } else {
-          console.log(err);
-          connection.release();
-        }
-      })
-    });
-  },
   GetMessages: function() {
     return new Promise(function(resolve, reject) {
       pool.getConnection((err, connection) => {
@@ -46,16 +26,16 @@ let thisclass = {
     });
   },
   // Deal with Send Message
-  SendMessage: function(data) {
+  SendMessage: function(user, data) {
     return new Promise(function(resolve, reject) {
       pool.getConnection((err, connection) => {
         if(!err) {
           let date = new Date(Date.now());
-          connection.query("INSERT INTO messages (author, message, channel, datetime, status) VALUES (?, ?, ?, ?, 0)", [data.author, data.message, data.channel, date.toISOString().replace("T", " ").slice(0, -5)], function(err, rows) {
+          connection.query("INSERT INTO messages (author, message, channel, datetime, status) VALUES (?, ?, ?, ?, 0)", [user.UserID, data.message, data.channel, date.toISOString().replace("T", " ").slice(0, -5)], function(err, rows) {
             if(!err) {
               connection.release()
               console.log(date.toISOString().replace("T", ""))
-              resolve({"author":data.author, "message":data.message, "channel":1, "datetime":date.toISOString().replace("T", " ").slice(5)})
+              resolve({"author":user.Username, "message":data.message, "channel":1, "datetime":date.toISOString().replace("T", " ").slice(5)})
             } else {
               console.log(date.toISOString().replace("T", " ").slice(0, -5))
               console.log(err)
