@@ -10,12 +10,13 @@ const io = new Server(server);
 // Our Classes
 const mysql_class = require('./class/mysql.class.js');
 const messaging_class = require('./class/messaging.class.js');
+const user_class = require('./class/user.class.js');
+
 
 app.get('/', (req, res) => {
   let date = new Date(Date.now());
   date.toISOString();
-  console.log(date)
-  res.send("Hiya hun");
+  res.send(date);
 })
 
 
@@ -31,7 +32,9 @@ io.on('connection', (socket) => {
     socket.disconnect();
   })
 
+  // Messages
   socket.on('Message-Send', (data) => {
+    console.log(socket.handshake.headers["x-real-ip"])
     messaging_class.SendMessage(data)
     .then((result) => {
       // IO SENDS TO ALL USERS
@@ -40,13 +43,36 @@ io.on('connection', (socket) => {
       console.log(err)
     })
   })
-
   socket.on('Message-FetchInit', (data) => {
     messaging_class.GetMessages(data)
     .then((result) => {
       socket.emit('Message-FetchInit_Reply', result);
     }).catch((err) => {
       console.log(err)
+    })
+  })
+
+  // Users
+  socket.on('User-Authenticate', (data) => {
+    console.log(socket.handshake.headers["x-real-ip"])
+    user_class.Login(data.username, data.password, socket.handshake.headers["x-real-ip"])
+    .then((result) => {
+      socket.emit('User-Authenticate_Reply', result);
+    }).catch((err) => {
+      socket.emit('User-Authenticate_Reply', err);
+    })
+  })
+  socket.on('User-Register', (data) => {
+    console.log(socket.handshake.headers["x-real-ip"])
+
+  })
+  socket.on('User-CheckToken', (data) => {
+    console.log(data)
+    user_class.CheckToken(data.Token, socket.handshake.headers["x-real-ip"])
+    .then((result) => {
+      socket.emit('User-CheckToken_Reply', result);
+    }).catch((err) => {
+      socket.emit('User-CheckToken_Reply', err);
     })
   })
 
